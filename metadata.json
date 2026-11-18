@@ -1,0 +1,6 @@
+{
+  "name": "Absorbing Markov Chain Simulator: Student Graduation & Financial Stress Model",
+  "description": "Interactive 6-state Absorbing Markov Chain simulator modeling student academic retention, financial stress interventions, fundamental matrices N = (I - Q)^(-1), absorption probabilities B = N * R, and Monte Carlo cohort trajectories.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

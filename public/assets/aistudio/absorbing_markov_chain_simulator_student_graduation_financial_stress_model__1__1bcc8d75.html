@@ -1,0 +1,2187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Absorbing Markov Chain Simulator: Student Graduation &amp; Financial Stress Model</title>
+  <style>
+    /* ==========================================================================
+       DESIGN TOKENS & PROJECTOR-OPTIMIZED ACADEMIC THEME
+       High-contrast palette engineered for classroom projectors & 16:9 displays
+       ========================================================================== */
+    :root {
+      --bg-canvas: #F8FAFC;
+      --bg-card: #FFFFFF;
+      --bg-subtle: #F1F5F9;
+      --navy-900: #0F172A;
+      --navy-800: #1E293B;
+      --navy-700: #334155;
+      --text-muted: #64748B;
+      --border-light: #E2E8F0;
+      --border-med: #CBD5E1;
+
+      --emerald-600: #059669;
+      --emerald-700: #047857;
+      --emerald-50: #ECFDF5;
+      --emerald-200: #A7F3D0;
+
+      --crimson-600: #DC2626;
+      --crimson-700: #B91C1C;
+      --crimson-50: #FEF2F2;
+      --crimson-200: #FECACA;
+
+      --amber-600: #D97706;
+      --amber-700: #B45309;
+      --amber-50: #FFFBEB;
+      --amber-200: #FDE68A;
+
+      --blue-600: #2563EB;
+      --blue-700: #1D4ED8;
+      --blue-50: #EFF6FF;
+      --blue-200: #BFDBFE;
+
+      --radius-lg: 14px;
+      --radius-md: 10px;
+      --radius-sm: 6px;
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+      --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.07), 0 2px 4px rgba(15, 23, 42, 0.04);
+
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-canvas);
+      color: var(--navy-900);
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+
+    .tabular {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ==========================================================================
+       TOP PRESENTATION HEADER BAR
+       ========================================================================== */
+    .topbar {
+      background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+      color: #FFFFFF;
+      padding: 16px 28px;
+      border-bottom: 3px solid var(--blue-600);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-badge {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: rgba(37, 99, 235, 0.22);
+      border: 1px solid rgba(96, 165, 250, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .topbar-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: -0.015em;
+      color: #F8FAFC;
+    }
+
+    .topbar-subtitle {
+      font-size: 0.85rem;
+      color: #94A3B8;
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .formula-chip {
+      background: rgba(255, 255, 255, 0.1);
+      color: #E2E8F0;
+      padding: 1px 8px;
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .active-mode-pill {
+      background: rgba(16, 185, 129, 0.16);
+      border: 1px solid rgba(52, 211, 153, 0.45);
+      color: #6EE7B7;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .active-mode-pill.intervention {
+      background: rgba(245, 158, 11, 0.18);
+      border-color: rgba(251, 191, 36, 0.5);
+      color: #FCD34D;
+    }
+
+    .btn-download {
+      background: var(--blue-600);
+      color: #FFFFFF;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 9px 15px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      transition: background 0.15s ease, transform 0.1s ease;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
+    }
+
+    .btn-download:hover {
+      background: var(--blue-700);
+    }
+
+    .btn-download:active {
+      transform: translateY(1px);
+    }
+
+    /* ==========================================================================
+       MAIN CONTAINER & SCENARIO CONTROL BAR
+       ========================================================================== */
+    .container {
+      max-width: 1520px;
+      margin: 0 auto;
+      padding: 18px 24px 28px 24px;
+    }
+
+    .scenario-bar {
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 14px 18px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .scenario-label-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .scenario-eyebrow {
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--blue-600);
+    }
+
+    .scenario-desc {
+      font-size: 0.86rem;
+      color: var(--navy-700);
+      font-weight: 500;
+    }
+
+    .scenario-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .scenario-btn {
+      background: var(--bg-subtle);
+      color: var(--navy-800);
+      border: 1.5px solid var(--border-med);
+      border-radius: var(--radius-md);
+      padding: 8px 14px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      transition: all 0.16s ease;
+    }
+
+    .scenario-btn:hover {
+      background: #E2E8F0;
+      border-color: #94A3B8;
+    }
+
+    .scenario-btn.active {
+      background: var(--navy-900);
+      color: #FFFFFF;
+      border-color: var(--navy-900);
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.2);
+    }
+
+    .scenario-btn.active[data-scenario="grant"] {
+      background: var(--amber-600);
+      border-color: var(--amber-600);
+    }
+
+    .scenario-btn.active[data-scenario="tutoring"] {
+      background: var(--blue-600);
+      border-color: var(--blue-600);
+    }
+
+    .scenario-btn.active[data-scenario="holistic"] {
+      background: var(--emerald-600);
+      border-color: var(--emerald-600);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* ==========================================================================
+       TWO-COLUMN MAIN WORKSPACE GRID
+       ========================================================================== */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1.12fr 0.88fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    @media (max-width: 1120px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .col-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .card-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--navy-900);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-subtitle {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .math-badge {
+      background: var(--blue-50);
+      color: var(--blue-700);
+      border: 1px solid var(--blue-200);
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      white-space: nowrap;
+    }
+
+    /* ==========================================================================
+       TRANSITION MATRIX TABLE (P = [Q | R])
+       ========================================================================== */
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .matrix-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 0.84rem;
+    }
+
+    .matrix-table th {
+      padding: 9px 6px;
+      font-weight: 700;
+      text-align: center;
+      font-size: 0.78rem;
+      letter-spacing: 0.01em;
+    }
+
+    .matrix-table th.th-state {
+      text-align: left;
+      padding-left: 10px;
+      background: var(--navy-900);
+      color: #FFFFFF;
+      border-top-left-radius: 8px;
+      min-width: 165px;
+    }
+
+    .matrix-table th.th-q {
+      background: var(--blue-600);
+      color: #FFFFFF;
+    }
+
+    .matrix-table th.th-q-stress {
+      background: #1D4ED8;
+      color: #FDE68A;
+    }
+
+    .matrix-table th.th-grad {
+      background: var(--emerald-600);
+      color: #FFFFFF;
+      border-left: 2px solid #FFFFFF;
+    }
+
+    .matrix-table th.th-drop {
+      background: var(--crimson-600);
+      color: #FFFFFF;
+    }
+
+    .matrix-table th.th-sum {
+      background: var(--navy-800);
+      color: #E2E8F0;
+      border-top-right-radius: 8px;
+      min-width: 112px;
+    }
+
+    .matrix-table td {
+      padding: 8px 5px;
+      border-bottom: 1px solid var(--border-light);
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .matrix-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .matrix-table tr.row-highlight {
+      background-color: #F8FAFC;
+    }
+
+    .state-cell {
+      text-align: left !important;
+      padding-left: 8px !important;
+    }
+
+    .state-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 700;
+      color: var(--navy-900);
+      font-size: 0.84rem;
+    }
+
+    .state-code {
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--blue-50);
+      color: var(--blue-700);
+      border: 1px solid var(--blue-200);
+    }
+
+    .state-code.stress {
+      background: var(--amber-50);
+      color: var(--amber-700);
+      border-color: var(--amber-200);
+    }
+
+    .state-sub {
+      display: block;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .prob-input {
+      width: 64px;
+      padding: 6px 4px;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--navy-900);
+      background: #FFFFFF;
+      border: 1.5px solid var(--border-med);
+      border-radius: var(--radius-sm);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    .prob-input:focus {
+      outline: none;
+      border-color: var(--blue-600);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
+    }
+
+    .prob-input.col-grad {
+      background: var(--emerald-50);
+      border-color: var(--emerald-200);
+      color: var(--emerald-700);
+    }
+
+    .prob-input.col-drop {
+      background: var(--crimson-50);
+      border-color: var(--crimson-200);
+      color: var(--crimson-700);
+    }
+
+    .prob-input.edited {
+      border-color: var(--amber-600);
+      box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.18);
+    }
+
+    .td-grad-border {
+      border-left: 2px solid var(--border-med);
+    }
+
+    .sum-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--emerald-50);
+      color: var(--emerald-700);
+      border: 1px solid var(--emerald-200);
+    }
+
+    .sum-badge.invalid {
+      background: var(--amber-50);
+      color: var(--amber-700);
+      border-color: var(--amber-200);
+    }
+
+    .btn-normalize {
+      display: inline-block;
+      margin-top: 4px;
+      background: var(--amber-600);
+      color: #FFFFFF;
+      border: none;
+      border-radius: 4px;
+      padding: 3px 7px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .btn-normalize:hover {
+      background: var(--amber-700);
+    }
+
+    .matrix-footnote {
+      margin-top: 10px;
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    /* ==========================================================================
+       FUNDAMENTAL MATRIX N = (I - Q)^(-1)
+       ========================================================================== */
+    .n-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    .n-table th {
+      background: var(--bg-subtle);
+      color: var(--navy-800);
+      font-weight: 700;
+      padding: 8px 8px;
+      text-align: center;
+      border-bottom: 2px solid var(--border-med);
+      font-size: 0.78rem;
+    }
+
+    .n-table th:first-child {
+      text-align: left;
+      padding-left: 10px;
+    }
+
+    .n-table th.th-total {
+      background: var(--navy-900);
+      color: #FFFFFF;
+    }
+
+    .n-table td {
+      padding: 9px 8px;
+      text-align: center;
+      border-bottom: 1px solid var(--border-light);
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: var(--navy-800);
+    }
+
+    .n-table td:first-child {
+      text-align: left;
+      padding-left: 10px;
+      font-family: var(--font-sans);
+      font-weight: 700;
+      color: var(--navy-900);
+    }
+
+    .n-table td.diag-cell {
+      background: var(--blue-50);
+      color: var(--blue-700);
+      font-weight: 700;
+    }
+
+    .n-table td.total-cell {
+      background: #F1F5F9;
+      font-weight: 800;
+      color: var(--navy-900);
+      border-left: 2px solid var(--border-med);
+    }
+
+    .n-table tr.stress-row td:first-child {
+      color: var(--amber-700);
+    }
+
+    .n-table tr.stress-row td.total-cell {
+      color: var(--amber-700);
+      background: var(--amber-50);
+    }
+
+    .error-banner {
+      display: none;
+      background: var(--crimson-50);
+      border: 1px solid var(--crimson-200);
+      color: var(--crimson-700);
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      font-size: 0.84rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    /* ==========================================================================
+       OUTCOME PROBABILITY BARS (B = N * R)
+       ========================================================================== */
+    .outcomes-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .outcome-item {
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: 11px 14px;
+      transition: border-color 0.2s ease, transform 0.15s ease;
+    }
+
+    .outcome-item.stress-card {
+      border-color: var(--amber-200);
+      background: #FFFDF7;
+    }
+
+    .outcome-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 7px;
+    }
+
+    .outcome-title-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .outcome-title {
+      font-weight: 800;
+      font-size: 0.92rem;
+      color: var(--navy-900);
+    }
+
+    .outcome-title.stress-text {
+      color: var(--amber-700);
+    }
+
+    .delta-badge {
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .delta-badge.pos {
+      background: var(--emerald-50);
+      color: var(--emerald-700);
+      border: 1px solid var(--emerald-200);
+    }
+
+    .delta-badge.neg {
+      background: var(--crimson-50);
+      color: var(--crimson-700);
+      border: 1px solid var(--crimson-200);
+    }
+
+    .sem-pill {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--navy-700);
+      background: #FFFFFF;
+      border: 1px solid var(--border-med);
+      padding: 2px 9px;
+      border-radius: 999px;
+    }
+
+    .stacked-bar {
+      width: 100%;
+      height: 32px;
+      background: var(--border-light);
+      border-radius: 7px;
+      overflow: hidden;
+      display: flex;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+    }
+
+    .bar-grad {
+      background: linear-gradient(90deg, #059669 0%, #10B981 100%);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .bar-drop {
+      background: linear-gradient(90deg, #DC2626 0%, #EF4444 100%);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 0 10px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .norm-warning-note {
+      display: none;
+      font-size: 0.76rem;
+      color: var(--amber-700);
+      background: var(--amber-50);
+      border: 1px solid var(--amber-200);
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    /* ==========================================================================
+       INTERACTIVE SVG STATE DIAGRAM & LIVE JOURNEY / MONTE CARLO SIMULATOR
+       ========================================================================== */
+    .svg-box {
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: 8px;
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    .svg-box svg {
+      width: 100%;
+      height: auto;
+      display: block;
+      user-select: none;
+    }
+
+    .node-group {
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+
+    .node-group:hover .node-circle {
+      stroke-width: 3.5;
+    }
+
+    .inspector-bar {
+      background: var(--blue-50);
+      border: 1px solid var(--blue-200);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      font-size: 0.8rem;
+      color: var(--navy-800);
+      margin-bottom: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .inspector-bar strong {
+      color: var(--blue-700);
+    }
+
+    .sim-panel {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-med);
+      border-radius: var(--radius-md);
+      padding: 13px 14px;
+    }
+
+    .sim-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .sim-select {
+      padding: 7px 10px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border-med);
+      background: #FFFFFF;
+      color: var(--navy-900);
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-sim {
+      padding: 7px 12px;
+      border-radius: var(--radius-sm);
+      border: none;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-step {
+      background: var(--blue-600);
+      color: #FFFFFF;
+    }
+    .btn-step:hover { background: var(--blue-700); }
+
+    .btn-auto {
+      background: var(--navy-900);
+      color: #FFFFFF;
+    }
+    .btn-auto:hover { background: var(--navy-800); }
+
+    .btn-mc {
+      background: var(--emerald-600);
+      color: #FFFFFF;
+    }
+    .btn-mc:hover { background: var(--emerald-700); }
+
+    .btn-reset {
+      background: #FFFFFF;
+      color: var(--navy-700);
+      border: 1px solid var(--border-med);
+    }
+    .btn-reset:hover { background: #E2E8F0; }
+
+    .btn-sim:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .journey-trail {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      min-height: 36px;
+      padding: 8px 10px;
+      background: #FFFFFF;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-sm);
+      font-size: 0.78rem;
+    }
+
+    .step-pill {
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      background: var(--blue-50);
+      color: var(--blue-700);
+      border: 1px solid var(--blue-200);
+      animation: popIn 0.2s ease;
+    }
+
+    .step-pill.s4 {
+      background: var(--amber-50);
+      color: var(--amber-700);
+      border-color: var(--amber-200);
+    }
+
+    .step-pill.grad {
+      background: var(--emerald-600);
+      color: #FFFFFF;
+      border-color: var(--emerald-700);
+    }
+
+    .step-pill.drop {
+      background: var(--crimson-600);
+      color: #FFFFFF;
+      border-color: var(--crimson-700);
+    }
+
+    .step-arrow {
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.88); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .mc-results {
+      display: none;
+      margin-top: 10px;
+      background: #FFFFFF;
+      border: 1px solid var(--emerald-200);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      font-size: 0.8rem;
+    }
+
+    .mc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .mc-box {
+      background: var(--bg-canvas);
+      padding: 7px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border-light);
+    }
+
+    .mc-box-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .mc-box-val {
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: var(--navy-900);
+      margin-top: 2px;
+    }
+
+    /* ==========================================================================
+       NON-BLOCKING TOAST NOTIFICATION
+       ========================================================================== */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 24px;
+      background: var(--navy-900);
+      color: #FFFFFF;
+      padding: 11px 18px;
+      border-radius: var(--radius-md);
+      font-size: 0.85rem;
+      font-weight: 600;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.25);
+      border-left: 4px solid var(--emerald-600);
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      z-index: 999;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========================================================================
+       1. TOP PRESENTATION HEADER BAR
+       ======================================================================== -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="brand-badge" aria-hidden="true">
+        <!-- Inline SVG Graduation + Markov Node Icon -->
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+          <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+        </svg>
+      </div>
+      <div>
+        <h1 class="topbar-title">Absorbing Markov Chain Simulator: Student Graduation &amp; Financial Stress Model</h1>
+        <div class="topbar-subtitle">
+          <span>Stochastic Processes &bull; 6-State Absorbing Markov Chain Model</span>
+          <span class="formula-chip">P = [ Q | R ]</span>
+          <span class="formula-chip">N = (I &minus; Q)&sup1;&sup1;</span>
+          <span class="formula-chip">B = N &middot; R</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="topbar-actions">
+      <div id="activeModePill" class="active-mode-pill">
+        <span class="dot" style="background:#34D399;"></span>
+        <span id="activeModeText">Scenario: Baseline (Empirical)</span>
+      </div>
+      <button type="button" class="btn-download" id="btnDownloadHtml" title="Save standalone offline copy">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Download .HTML File
+      </button>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- ======================================================================
+         2. ONE-CLICK LIVE "WHAT-IF" POLICY SCENARIO BAR
+         ====================================================================== -->
+    <section class="scenario-bar" aria-label="Policy Intervention Scenarios">
+      <div class="scenario-label-group">
+        <span class="scenario-eyebrow">Live Policy "What-If" Simulator</span>
+        <span id="scenarioDesc" class="scenario-desc">
+          Calibrated on UCI Student Dropout Dataset (N = 4,424), NCES Completion Benchmarks, &amp; Penn State CCMH / Lumina-Gallup Financial Stress Studies.
+        </span>
+      </div>
+      <div class="scenario-buttons">
+        <button type="button" class="scenario-btn active" data-scenario="baseline">
+          <span class="dot" style="background:#64748B;"></span>
+          Baseline (Empirical Data)
+        </button>
+        <button type="button" class="scenario-btn" data-scenario="grant">
+          <span class="dot" style="background:#D97706;"></span>
+          Emergency Tuition Micro-Grant
+        </button>
+        <button type="button" class="scenario-btn" data-scenario="tutoring">
+          <span class="dot" style="background:#2563EB;"></span>
+          Early Academic Tutoring
+        </button>
+        <button type="button" class="scenario-btn" data-scenario="holistic">
+          <span class="dot" style="background:#059669;"></span>
+          Holistic Support (Grant + Tutoring)
+        </button>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         3. MAIN TWO-COLUMN ANALYTICAL WORKSPACE
+         ====================================================================== -->
+    <div class="main-grid">
+
+      <!-- LEFT COLUMN: MATRIX INPUTS & FUNDAMENTAL MATRIX N -->
+      <div class="col-stack">
+
+        <!-- CARD 1: INTERACTIVE TRANSITION MATRIX P = [Q | R] -->
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">1. Semester-to-Semester Transition Matrix</h2>
+              <p class="card-subtitle">Edit any probability cell live during Q&amp;A &mdash; all matrices recalculate instantaneously</p>
+            </div>
+            <span class="math-badge">P = [ Q (4&times;4) | R (4&times;2) ]</span>
+          </div>
+
+          <div class="table-wrap">
+            <table class="matrix-table" id="transitionTable">
+              <thead>
+                <tr>
+                  <th class="th-state">Current Semester State</th>
+                  <th class="th-q">To S1<br><span style="font-weight:400;opacity:0.9;">High GPA</span></th>
+                  <th class="th-q">To S2<br><span style="font-weight:400;opacity:0.9;">Mid GPA</span></th>
+                  <th class="th-q">To S3<br><span style="font-weight:400;opacity:0.9;">Low GPA</span></th>
+                  <th class="th-q-stress">To S4<br><span style="font-weight:400;opacity:0.95;">Fin. Stress</span></th>
+                  <th class="th-grad">Graduate<br><span style="font-weight:400;opacity:0.9;">(A1)</span></th>
+                  <th class="th-drop">Dropout<br><span style="font-weight:400;opacity:0.9;">(A2)</span></th>
+                  <th class="th-sum">Row Sum</th>
+                </tr>
+              </thead>
+              <tbody id="matrixBody">
+                <!-- Populated dynamically by JS -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="matrix-footnote">
+            <span><strong>Transient Sub-Matrix Q:</strong> S1&ndash;S4 movement &bull; <strong>Absorbing Sub-Matrix R:</strong> Permanent completion/exit</span>
+            <span>Rows must sum to <strong>1.00</strong></span>
+          </div>
+        </section>
+
+        <!-- CARD 2: FUNDAMENTAL MATRIX N = (I - Q)^(-1) -->
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">2. Fundamental Matrix &amp; Expected Semesters</h2>
+              <p class="card-subtitle">Expected semesters spent in each state before reaching Graduate or Dropout</p>
+            </div>
+            <span class="math-badge">N = (I &minus; Q)&sup1;&sup1; &nbsp;|&nbsp; t = N&middot;1</span>
+          </div>
+
+          <div id="singularAlert" class="error-banner">
+            Matrix (I &minus; Q) is singular or invalid: at least one transient state has zero path to an absorbing state. Adjust probabilities or normalize rows.
+          </div>
+
+          <div class="table-wrap">
+            <table class="n-table" id="fundamentalTable">
+              <thead>
+                <tr>
+                  <th>Starting State</th>
+                  <th>Sem. in S1<br>(High)</th>
+                  <th>Sem. in S2<br>(Mid)</th>
+                  <th>Sem. in S3<br>(Low)</th>
+                  <th>Sem. in S4<br>(Fin. Stress)</th>
+                  <th class="th-total">Total Expected<br>Semesters (t)</th>
+                </tr>
+              </thead>
+              <tbody id="fundamentalBody">
+                <!-- Populated dynamically by JS -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- RIGHT COLUMN: FINAL OUTCOMES B = N*R & INTERACTIVE DIAGRAM / SIMULATOR -->
+      <div class="col-stack">
+
+        <!-- CARD 3: FINAL OUTCOME PROBABILITIES B = N * R -->
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">3. Final Outcome Odds by Starting State</h2>
+              <p class="card-subtitle">Long-run probability of Graduating vs. Dropping Out for each cohort</p>
+            </div>
+            <span class="math-badge">B = N &times; R</span>
+          </div>
+
+          <div id="normWarningNote" class="norm-warning-note">
+            One or more rows in P do not sum to 1.00. Click "Normalize Row" in Section 1 for exact absorption probabilities.
+          </div>
+
+          <div class="outcomes-list" id="outcomesList">
+            <!-- Populated dynamically by JS -->
+          </div>
+        </section>
+
+        <!-- CARD 4: INTERACTIVE STATE NETWORK & LIVE STUDENT SIMULATOR -->
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">4. Interactive State Diagram &amp; Student Journey Simulator</h2>
+              <p class="card-subtitle">Click any node to inspect transitions, or simulate individual &amp; cohort paths</p>
+            </div>
+            <span class="math-badge">Monte Carlo &amp; Step-by-Step</span>
+          </div>
+
+          <!-- Interactive SVG State Transition Network -->
+          <div class="svg-box">
+            <svg id="stateSvg" viewBox="0 0 640 265" aria-label="6-State Absorbing Markov Chain Diagram">
+              <defs>
+                <marker id="arrow-gray" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 1 L 10 5 L 0 9 z" fill="#94A3B8"></path>
+                </marker>
+                <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+                  <path d="M 0 1 L 10 5 L 0 9 z" fill="#2563EB"></path>
+                </marker>
+                <marker id="arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+                  <path d="M 0 1 L 10 5 L 0 9 z" fill="#059669"></path>
+                </marker>
+                <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+                  <path d="M 0 1 L 10 5 L 0 9 z" fill="#DC2626"></path>
+                </marker>
+              </defs>
+
+              <!-- Dynamic Edges Layer -->
+              <g id="svgEdgesLayer"></g>
+
+              <!-- Static / Highlightable Nodes Layer -->
+              <g id="svgNodesLayer"></g>
+            </svg>
+          </div>
+
+          <!-- Selected Node Outgoing Probabilities Strip -->
+          <div class="inspector-bar" id="nodeInspector">
+            <span><strong>Click any state node above</strong> to inspect its exact next-semester move probabilities.</span>
+          </div>
+
+          <!-- Live Student Journey & Monte Carlo Controls -->
+          <div class="sim-panel">
+            <div class="sim-controls">
+              <label for="simStartSelect" style="font-size:0.8rem;font-weight:700;color:var(--navy-800);">Start:</label>
+              <select id="simStartSelect" class="sim-select">
+                <option value="0">S1: High GPA (&ge;3.0)</option>
+                <option value="1">S2: Mid GPA (2.0&ndash;2.99)</option>
+                <option value="2">S3: Low GPA (&lt;2.0)</option>
+                <option value="3" selected>S4: Financial Stress</option>
+              </select>
+
+              <button type="button" class="btn-sim btn-step" id="btnStepSim">Step 1 Semester</button>
+              <button type="button" class="btn-sim btn-auto" id="btnAutoSim">Auto-Run Journey</button>
+              <button type="button" class="btn-sim btn-reset" id="btnResetSim">Reset</button>
+              <button type="button" class="btn-sim btn-mc" id="btnMonteCarlo">Simulate 1,000 Students</button>
+            </div>
+
+            <!-- Live Student Semester-by-Semester Pill Trail -->
+            <div class="journey-trail" id="journeyTrail">
+              <span class="step-pill s4">Sem 0: S4 (Fin. Stress)</span>
+              <span style="color:var(--text-muted);font-size:0.76rem;margin-left:4px;">&larr; Click "Step 1 Semester" or "Auto-Run Journey"</span>
+            </div>
+
+            <!-- 1,000-Student Monte Carlo Comparison Box -->
+            <div class="mc-results" id="mcResults">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <strong style="color:var(--emerald-700);">Monte Carlo Cohort Simulation (1,000 Virtual Students from <span id="mcStartName">S4</span>)</strong>
+                <span id="mcDiffBadge" class="delta-badge pos">Matches Theory</span>
+              </div>
+              <div class="mc-grid">
+                <div class="mc-box">
+                  <div class="mc-box-label">Simulated Empirical Outcome</div>
+                  <div class="mc-box-val" id="mcSimVal">Grad: --% | Drop: --% | -- sem</div>
+                </div>
+                <div class="mc-box">
+                  <div class="mc-box-label">Exact Markov Matrix (B = N&middot;R)</div>
+                  <div class="mc-box-val" id="mcTheoryVal">Grad: --% | Drop: --% | -- sem</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Toast Feedback -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    /* ==========================================================================
+       ABSORBING MARKOV CHAIN ENGINE & INTERACTIVE PRESENTATION CONTROLLER
+       Pure Vanilla JavaScript — Zero external dependencies (100% offline-ready)
+       ========================================================================== */
+
+    // 1. State Metadata
+    const STATES = [
+      { id: 0, code: "S1", name: "High GPA", desc: "GPA ≥ 3.0, Financially Stable", short: "S1: High GPA", color: "#2563EB" },
+      { id: 1, code: "S2", name: "Mid GPA", desc: "GPA 2.0–2.99, Financially Stable", short: "S2: Mid GPA", color: "#2563EB" },
+      { id: 2, code: "S3", name: "Low GPA", desc: "GPA < 2.0, Academic Probation", short: "S3: Low GPA", color: "#2563EB" },
+      { id: 3, code: "S4", name: "Financial Stress", desc: "Overdue Tuition / Aid Loss", short: "S4: Fin. Stress", color: "#D97706" }
+    ];
+
+    // 2. Pre-configured Empirical & Policy Intervention Scenarios
+    // Each row: [toS1, toS2, toS3, toS4, toGraduate(A1), toDropout(A2)]
+    const SCENARIOS = {
+      baseline: {
+        label: "Baseline (Empirical)",
+        isIntervention: false,
+        description: "Calibrated on UCI Student Dropout Dataset (N = 4,424), NCES Completion Benchmarks, & Penn State CCMH / Lumina-Gallup Financial Stress Studies.",
+        matrix: [
+          [0.55, 0.12, 0.02, 0.05, 0.25, 0.01], // S1: High GPA
+          [0.18, 0.48, 0.12, 0.08, 0.10, 0.04], // S2: Mid GPA
+          [0.03, 0.22, 0.45, 0.10, 0.02, 0.18], // S3: Low GPA
+          [0.05, 0.15, 0.20, 0.35, 0.03, 0.22]  // S4: Financial Stress
+        ]
+      },
+      grant: {
+        label: "Emergency Micro-Grant",
+        isIntervention: true,
+        description: "Intervention on S4 (Financial Stress): Clears overdue tuition holds, lifting S4 → Mid GPA from 0.15 to 0.35 and cutting direct S4 Dropout from 0.22 to 0.02.",
+        matrix: [
+          [0.55, 0.12, 0.02, 0.05, 0.25, 0.01],
+          [0.18, 0.48, 0.12, 0.08, 0.10, 0.04],
+          [0.03, 0.22, 0.45, 0.10, 0.02, 0.18],
+          [0.05, 0.35, 0.20, 0.35, 0.03, 0.02]  // Row sum = 1.00
+        ]
+      },
+      tutoring: {
+        label: "Early Academic Tutoring",
+        isIntervention: true,
+        description: "Intervention on S3 (Low GPA): Mandatory advising & tutoring boosts S3 → Mid GPA recovery from 0.22 to 0.40 and reduces S3 stagnation from 0.45 to 0.27.",
+        matrix: [
+          [0.55, 0.12, 0.02, 0.05, 0.25, 0.01],
+          [0.18, 0.48, 0.12, 0.08, 0.10, 0.04],
+          [0.03, 0.40, 0.27, 0.10, 0.02, 0.18], // Row sum = 1.00
+          [0.05, 0.15, 0.20, 0.35, 0.03, 0.22]
+        ]
+      },
+      holistic: {
+        label: "Holistic Support (Both)",
+        isIntervention: true,
+        description: "Combined Policy Package: Deploys Emergency Tuition Micro-Grants (S4) alongside Early Academic Tutoring (S3) to tackle both financial and academic attrition.",
+        matrix: [
+          [0.55, 0.12, 0.02, 0.05, 0.25, 0.01],
+          [0.18, 0.48, 0.12, 0.08, 0.10, 0.04],
+          [0.03, 0.40, 0.27, 0.10, 0.02, 0.18],
+          [0.05, 0.35, 0.20, 0.35, 0.03, 0.02]
+        ]
+      }
+    };
+
+    // Deep clone helper
+    function cloneMatrix(m) {
+      return m.map(row => [...row]);
+    }
+
+    // Active Application State
+    let currentScenarioKey = "baseline";
+    let currentP = cloneMatrix(SCENARIOS.baseline.matrix);
+    let baselineMetrics = null; // Stores baseline B and t for delta comparison
+    let latestComputation = null;
+    let selectedNodeIndex = 3; // Default inspect S4 (Financial Stress)
+
+    // Student Journey Simulator State
+    let journeyHistory = [3]; // Array of state indices (0..3, 4=Grad, 5=Drop)
+    let autoSimTimer = null;
+
+    /* ==========================================================================
+       LINEAR ALGEBRA: GAUSS-JORDAN MATRIX INVERSION WITH PARTIAL PIVOTING
+       Computes N = (I - Q)^(-1) and B = N * R
+       ========================================================================== */
+    function invertMatrix(matrix) {
+      const n = matrix.length;
+      // Build augmented matrix [A | I]
+      const aug = Array.from({ length: n }, (_, i) => {
+        const row = new Array(2 * n).fill(0);
+        for (let j = 0; j < n; j++) row[j] = matrix[i][j];
+        row[n + i] = 1;
+        return row;
+      });
+
+      for (let col = 0; col < n; col++) {
+        // Partial pivoting: find row with max absolute value in current column
+        let pivotRow = col;
+        let maxVal = Math.abs(aug[col][col]);
+        for (let r = col + 1; r < n; r++) {
+          const val = Math.abs(aug[r][col]);
+          if (val > maxVal) {
+            maxVal = val;
+            pivotRow = r;
+          }
+        }
+
+        // Check for singular or near-singular matrix
+        if (maxVal < 1e-10) {
+          return null;
+        }
+
+        // Swap rows if needed
+        if (pivotRow !== col) {
+          const temp = aug[col];
+          aug[col] = aug[pivotRow];
+          aug[pivotRow] = temp;
+        }
+
+        // Normalize pivot row
+        const pivot = aug[col][col];
+        for (let j = 0; j < 2 * n; j++) {
+          aug[col][j] /= pivot;
+        }
+
+        // Eliminate other rows
+        for (let r = 0; r < n; r++) {
+          if (r !== col) {
+            const factor = aug[r][col];
+            for (let j = 0; j < 2 * n; j++) {
+              aug[r][j] -= factor * aug[col][j];
+            }
+          }
+        }
+      }
+
+      // Extract right half as inverse matrix
+      return aug.map(row => row.slice(n));
+    }
+
+    function computeMarkovChain(P) {
+      const n = 4;
+      // Extract Q (4x4) and R (4x2)
+      const Q = P.map(row => row.slice(0, 4));
+      const R = P.map(row => row.slice(4, 6));
+
+      // Compute (I - Q)
+      const IminusQ = Array.from({ length: n }, (_, i) =>
+        Array.from({ length: n }, (_, j) => (i === j ? 1 : 0) - Q[i][j])
+      );
+
+      // Invert (I - Q) to get Fundamental Matrix N
+      const N = invertMatrix(IminusQ);
+      if (!N) return null;
+
+      // Compute expected semesters t = N * 1 (row sums of N)
+      const expectedSemesters = N.map(row => row.reduce((acc, v) => acc + v, 0));
+
+      // Compute Absorption Probabilities B = N * R (4x2)
+      const B = Array.from({ length: n }, (_, i) => {
+        let pGrad = 0;
+        let pDrop = 0;
+        for (let k = 0; k < n; k++) {
+          pGrad += N[i][k] * R[k][0];
+          pDrop += N[i][k] * R[k][1];
+        }
+        return [pGrad, pDrop];
+      });
+
+      return { Q, R, N, expectedSemesters, B };
+    }
+
+    /* ==========================================================================
+       UI RENDERING: TRANSITION MATRIX INPUT TABLE
+       ========================================================================== */
+    function renderMatrixInputs() {
+      const tbody = document.getElementById("matrixBody");
+      tbody.innerHTML = "";
+      const baseMatrix = SCENARIOS.baseline.matrix;
+
+      STATES.forEach((st, rIdx) => {
+        const tr = document.createElement("tr");
+        if (rIdx === 3) tr.classList.add("row-highlight");
+
+        // State Label Cell
+        const tdState = document.createElement("td");
+        tdState.className = "state-cell";
+        tdState.innerHTML = `
+          <span class="state-tag">
+            <span class="state-code ${rIdx === 3 ? "stress" : ""}">${st.code}</span>
+            <span>${st.name}</span>
+          </span>
+          <span class="state-sub">${st.desc}</span>
+        `;
+        tr.appendChild(tdState);
+
+        // 6 Probability Input Cells
+        for (let cIdx = 0; cIdx < 6; cIdx++) {
+          const td = document.createElement("td");
+          if (cIdx === 4) td.className = "td-grad-border";
+
+          const input = document.createElement("input");
+          input.type = "number";
+          input.step = "0.01";
+          input.min = "0";
+          input.max = "1";
+          input.value = currentP[rIdx][cIdx].toFixed(2);
+          input.className = "prob-input";
+          if (cIdx === 4) input.classList.add("col-grad");
+          if (cIdx === 5) input.classList.add("col-drop");
+          if (Math.abs(currentP[rIdx][cIdx] - baseMatrix[rIdx][cIdx]) > 0.0001) {
+            input.classList.add("edited");
+          }
+          input.setAttribute("aria-label", `${st.short} to column ${cIdx + 1}`);
+          input.dataset.row = rIdx;
+          input.dataset.col = cIdx;
+
+          input.addEventListener("input", handleCellInput);
+          td.appendChild(input);
+          tr.appendChild(td);
+        }
+
+        // Row Sum & Normalize Cell
+        const tdSum = document.createElement("td");
+        tdSum.id = `row-sum-cell-${rIdx}`;
+        tr.appendChild(tdSum);
+
+        tbody.appendChild(tr);
+      });
+
+      updateRowSumBadges();
+    }
+
+    function updateRowSumBadges() {
+      let anyInvalid = false;
+
+      for (let rIdx = 0; rIdx < 4; rIdx++) {
+        const sum = currentP[rIdx].reduce((acc, v) => acc + v, 0);
+        const isValid = Math.abs(sum - 1.0) <= 0.0015;
+        if (!isValid) anyInvalid = true;
+
+        const cell = document.getElementById(`row-sum-cell-${rIdx}`);
+        if (!cell) continue;
+
+        if (isValid) {
+          cell.innerHTML = `<span class="sum-badge">1.00 &check;</span>`;
+        } else {
+          cell.innerHTML = `
+            <span class="sum-badge invalid">${sum.toFixed(2)} &#9888;</span>
+            <br>
+            <button type="button" class="btn-normalize" onclick="normalizeRow(${rIdx})">Normalize Row</button>
+          `;
+        }
+      }
+
+      const warnNote = document.getElementById("normWarningNote");
+      warnNote.style.display = anyInvalid ? "block" : "none";
+    }
+
+    function handleCellInput(e) {
+      const r = parseInt(e.target.dataset.row, 10);
+      const c = parseInt(e.target.dataset.col, 10);
+      let val = parseFloat(e.target.value);
+      if (isNaN(val) || val < 0) val = 0;
+      if (val > 1) val = 1;
+
+      currentP[r][c] = val;
+
+      // Highlight edited input vs baseline
+      const isDiff = Math.abs(val - SCENARIOS.baseline.matrix[r][c]) > 0.0001;
+      e.target.classList.toggle("edited", isDiff);
+
+      // Switch scenario badge to Custom Live Edit
+      setCustomScenarioIndicator();
+      updateRowSumBadges();
+      recalculateAndRenderAll();
+    }
+
+    window.normalizeRow = function(rIdx) {
+      const row = currentP[rIdx];
+      const sum = row.reduce((acc, v) => acc + v, 0);
+      if (sum <= 0) {
+        // Default uniform fallback if user zeroed entire row
+        currentP[rIdx] = [0.20, 0.20, 0.20, 0.20, 0.10, 0.10];
+      } else {
+        // Proportionally scale and round to 2 decimals while guaranteeing sum === 1.00
+        const scaled = row.map(v => Math.round((v / sum) * 100) / 100);
+        const roundedSum = scaled.reduce((acc, v) => acc + v, 0);
+        const diff = Math.round((1.0 - roundedSum) * 100) / 100;
+        // Apply residual to largest element in row
+        let maxIdx = 0;
+        for (let i = 1; i < scaled.length; i++) {
+          if (scaled[i] > scaled[maxIdx]) maxIdx = i;
+        }
+        scaled[maxIdx] = Math.max(0, Math.round((scaled[maxIdx] + diff) * 100) / 100);
+        currentP[rIdx] = scaled;
+      }
+
+      renderMatrixInputs();
+      recalculateAndRenderAll();
+      showToast(`Row ${STATES[rIdx].code} normalized to 1.00`);
+    };
+
+    function setCustomScenarioIndicator() {
+      currentScenarioKey = "custom";
+      document.querySelectorAll(".scenario-btn").forEach(btn => btn.classList.remove("active"));
+      const pill = document.getElementById("activeModePill");
+      pill.classList.add("intervention");
+      pill.querySelector(".dot").style.background = "#FBBF24";
+      document.getElementById("activeModeText").textContent = "Scenario: Custom Live Edit";
+      document.getElementById("scenarioDesc").textContent =
+        "Custom transition probabilities active. Use 'Normalize Row' if any edited row does not sum to 1.00, or click a preset scenario to reset.";
+    }
+
+    /* ==========================================================================
+       UI RENDERING: FUNDAMENTAL MATRIX N & OUTCOME BARS B = N * R
+       ========================================================================== */
+    function recalculateAndRenderAll() {
+      const result = computeMarkovChain(currentP);
+      latestComputation = result;
+
+      const singularAlert = document.getElementById("singularAlert");
+      if (!result) {
+        singularAlert.style.display = "block";
+        return;
+      }
+      singularAlert.style.display = "none";
+
+      renderFundamentalMatrix(result);
+      renderOutcomeCards(result);
+      renderStateSvg();
+      updateNodeInspector();
+      updateMonteCarloTheory();
+    }
+
+    function renderFundamentalMatrix(result) {
+      const tbody = document.getElementById("fundamentalBody");
+      tbody.innerHTML = "";
+
+      STATES.forEach((st, i) => {
+        const tr = document.createElement("tr");
+        if (i === 3) tr.classList.add("stress-row");
+
+        const rowCells = result.N[i]
+          .map((val, j) => `<td class="${i === j ? "diag-cell" : ""}">${val.toFixed(2)}</td>`)
+          .join("");
+
+        tr.innerHTML = `
+          <td>Start in ${st.code} (${st.name})</td>
+          ${rowCells}
+          <td class="total-cell">${result.expectedSemesters[i].toFixed(2)} sem.</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderOutcomeCards(result) {
+      const container = document.getElementById("outcomesList");
+      container.innerHTML = "";
+
+      STATES.forEach((st, i) => {
+        const gradProb = Math.max(0, Math.min(1, result.B[i][0]));
+        const dropProb = Math.max(0, Math.min(1, result.B[i][1]));
+        const gradPct = (gradProb * 100).toFixed(1);
+        const dropPct = (dropProb * 100).toFixed(1);
+        const totalSem = result.expectedSemesters[i].toFixed(2);
+
+        // Compute delta vs. Baseline graduation probability
+        let deltaHtml = "";
+        if (baselineMetrics) {
+          const baseGradPct = baselineMetrics.B[i][0] * 100;
+          const diff = gradProb * 100 - baseGradPct;
+          if (Math.abs(diff) >= 0.15) {
+            const sign = diff > 0 ? "+" : "";
+            const cls = diff > 0 ? "pos" : "neg";
+            deltaHtml = `<span class="delta-badge ${cls}">${sign}${diff.toFixed(1)}% Grad Odds</span>`;
+          }
+        }
+
+        // Normalize visual bar widths if row sum slightly off 1.0
+        const sumPct = gradProb + dropProb;
+        const barGradWidth = sumPct > 0 ? (gradProb / sumPct) * 100 : 50;
+        const barDropWidth = sumPct > 0 ? (dropProb / sumPct) * 100 : 50;
+
+        const item = document.createElement("div");
+        item.className = `outcome-item ${i === 3 ? "stress-card" : ""}`;
+        item.innerHTML = `
+          <div class="outcome-top">
+            <div class="outcome-title-group">
+              <span class="outcome-title ${i === 3 ? "stress-text" : ""}">Start in ${st.name} (${st.code})</span>
+              ${deltaHtml}
+            </div>
+            <span class="sem-pill">~${totalSem} semesters left</span>
+          </div>
+          <div class="stacked-bar" role="img" aria-label="${st.name}: ${gradPct}% Graduate, ${dropPct}% Dropout">
+            <div class="bar-grad" style="width:${barGradWidth.toFixed(2)}%;">
+              ${barGradWidth >= 16 ? `${gradPct}% Graduate` : `${gradPct}%`}
+            </div>
+            <div class="bar-drop" style="width:${barDropWidth.toFixed(2)}%;">
+              ${barDropWidth >= 16 ? `${dropPct}% Dropout` : `${dropPct}%`}
+            </div>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    /* ==========================================================================
+       INTERACTIVE SVG 6-STATE DIAGRAM
+       ========================================================================== */
+    const NODE_COORDS = [
+      { x: 95,  y: 72, code: "S1", label: "High GPA",    fill: "#1E3A8A", stroke: "#2563EB" },
+      { x: 245, y: 72, code: "S2", label: "Mid GPA",     fill: "#1E3A8A", stroke: "#2563EB" },
+      { x: 395, y: 72, code: "S3", label: "Low GPA",     fill: "#1E3A8A", stroke: "#2563EB" },
+      { x: 545, y: 72, code: "S4", label: "Fin. Stress", fill: "#92400E", stroke: "#D97706" }
+    ];
+
+    const ABSORBING_COORDS = [
+      { x: 215, y: 222, code: "A1", label: "Graduate", fill: "#059669", stroke: "#047857" },
+      { x: 425, y: 222, code: "A2", label: "Dropout",  fill: "#DC2626", stroke: "#B91C1C" }
+    ];
+
+    function renderStateSvg() {
+      const edgesLayer = document.getElementById("svgEdgesLayer");
+      const nodesLayer = document.getElementById("svgNodesLayer");
+      edgesLayer.innerHTML = "";
+      nodesLayer.innerHTML = "";
+
+      const activeSimNode = journeyHistory[journeyHistory.length - 1];
+      const focusIdx = selectedNodeIndex;
+
+      // 1. Draw self-loops above S1..S4
+      NODE_COORDS.forEach((n, i) => {
+        const pSelf = currentP[i][i];
+        const isFocused = focusIdx === i;
+        const opacity = isFocused ? 0.95 : 0.35;
+        const strokeColor = isFocused ? (i === 3 ? "#D97706" : "#2563EB") : "#94A3B8";
+        const pathD = `M ${n.x - 14} ${n.y - 24} C ${n.x - 26} ${n.y - 58}, ${n.x + 26} ${n.y - 58}, ${n.x + 14} ${n.y - 24}`;
+
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", pathD);
+        path.setAttribute("fill", "none");
+        path.setAttribute("stroke", strokeColor);
+        path.setAttribute("stroke-width", isFocused ? "2.4" : "1.5");
+        path.setAttribute("opacity", opacity);
+        edgesLayer.appendChild(path);
+
+        if (isFocused || pSelf >= 0.30) {
+          const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+          txt.setAttribute("x", n.x);
+          txt.setAttribute("y", n.y - 52);
+          txt.setAttribute("text-anchor", "middle");
+          txt.setAttribute("font-size", "10.5");
+          txt.setAttribute("font-weight", "700");
+          txt.setAttribute("font-family", "monospace");
+          txt.setAttribute("fill", isFocused ? strokeColor : "#64748B");
+          txt.textContent = pSelf.toFixed(2);
+          edgesLayer.appendChild(txt);
+        }
+      });
+
+      // 2. Draw transient-to-transient arrows
+      for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 4; j++) {
+          if (i === j) continue;
+          const prob = currentP[i][j];
+          if (prob <= 0.005) continue;
+
+          const isFocused = focusIdx === i;
+          // Only render non-adjacent long arcs when focused to keep diagram clean
+          if (!isFocused && Math.abs(i - j) > 1) continue;
+
+          const src = NODE_COORDS[i];
+          const dst = NODE_COORDS[j];
+          const dir = j > i ? 1 : -1;
+          const dist = Math.abs(j - i);
+          const curveLift = dir * (16 + (dist - 1) * 16);
+          const midX = (src.x + dst.x) / 2;
+          const midY = src.y - curveLift;
+
+          const x1 = src.x + dir * 26;
+          const y1 = src.y - dir * 6;
+          const x2 = dst.x - dir * 28;
+          const y2 = dst.y - dir * 6;
+
+          const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          path.setAttribute("d", `M ${x1} ${y1} Q ${midX} ${midY} ${x2} ${y2}`);
+          path.setAttribute("fill", "none");
+          path.setAttribute("stroke", isFocused ? "#2563EB" : "#CBD5E1");
+          path.setAttribute("stroke-width", isFocused ? (1.6 + prob * 4).toFixed(1) : "1.4");
+          path.setAttribute("opacity", isFocused ? "0.95" : "0.75");
+          path.setAttribute("marker-end", isFocused ? "url(#arrow-blue)" : "url(#arrow-gray)");
+          edgesLayer.appendChild(path);
+
+          if (isFocused) {
+            const lbl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            lbl.setAttribute("x", midX);
+            lbl.setAttribute("y", midY + (dir > 0 ? -4 : 11));
+            lbl.setAttribute("text-anchor", "middle");
+            lbl.setAttribute("font-size", "10.5");
+            lbl.setAttribute("font-weight", "800");
+            lbl.setAttribute("font-family", "monospace");
+            lbl.setAttribute("fill", "#1D4ED8");
+            lbl.textContent = prob.toFixed(2);
+            edgesLayer.appendChild(lbl);
+          }
+        }
+      }
+
+      // 3. Draw transient-to-absorbing arrows (Graduate & Dropout)
+      for (let i = 0; i < 4; i++) {
+        const src = NODE_COORDS[i];
+        const isFocused = focusIdx === i;
+
+        // To Graduate (col 4)
+        const pGrad = currentP[i][4];
+        if (pGrad > 0.005) {
+          const dst = ABSORBING_COORDS[0];
+          const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          line.setAttribute("x1", src.x - 6);
+          line.setAttribute("y1", src.y + 27);
+          line.setAttribute("x2", dst.x + (i - 1.5) * 14);
+          line.setAttribute("y2", dst.y - 24);
+          line.setAttribute("stroke", isFocused ? "#059669" : "#A7F3D0");
+          line.setAttribute("stroke-width", isFocused ? (1.8 + pGrad * 5).toFixed(1) : "1.4");
+          line.setAttribute("opacity", isFocused ? "0.95" : "0.65");
+          line.setAttribute("marker-end", isFocused ? "url(#arrow-green)" : "url(#arrow-gray)");
+          edgesLayer.appendChild(line);
+
+          if (isFocused) {
+            const lx = (src.x + dst.x) / 2 - 14;
+            const ly = (src.y + dst.y) / 2 + 4;
+            const lbl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            lbl.setAttribute("x", lx);
+            lbl.setAttribute("y", ly);
+            lbl.setAttribute("font-size", "11");
+            lbl.setAttribute("font-weight", "800");
+            lbl.setAttribute("font-family", "monospace");
+            lbl.setAttribute("fill", "#047857");
+            lbl.textContent = pGrad.toFixed(2);
+            edgesLayer.appendChild(lbl);
+          }
+        }
+
+        // To Dropout (col 5)
+        const pDrop = currentP[i][5];
+        if (pDrop > 0.005) {
+          const dst = ABSORBING_COORDS[1];
+          const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          line.setAttribute("x1", src.x + 6);
+          line.setAttribute("y1", src.y + 27);
+          line.setAttribute("x2", dst.x + (i - 1.5) * 14);
+          line.setAttribute("y2", dst.y - 24);
+          line.setAttribute("stroke", isFocused ? "#DC2626" : "#FECACA");
+          line.setAttribute("stroke-width", isFocused ? (1.8 + pDrop * 5).toFixed(1) : "1.4");
+          line.setAttribute("opacity", isFocused ? "0.95" : "0.65");
+          line.setAttribute("marker-end", isFocused ? "url(#arrow-red)" : "url(#arrow-gray)");
+          edgesLayer.appendChild(line);
+
+          if (isFocused) {
+            const lx = (src.x + dst.x) / 2 + 12;
+            const ly = (src.y + dst.y) / 2 + 4;
+            const lbl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            lbl.setAttribute("x", lx);
+            lbl.setAttribute("y", ly);
+            lbl.setAttribute("font-size", "11");
+            lbl.setAttribute("font-weight", "800");
+            lbl.setAttribute("font-family", "monospace");
+            lbl.setAttribute("fill", "#B91C1C");
+            lbl.textContent = pDrop.toFixed(2);
+            edgesLayer.appendChild(lbl);
+          }
+        }
+      }
+
+      // 4. Draw Transient Nodes (S1..S4)
+      NODE_COORDS.forEach((n, i) => {
+        const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        g.setAttribute("class", "node-group");
+        g.addEventListener("click", () => {
+          selectedNodeIndex = i;
+          renderStateSvg();
+          updateNodeInspector();
+        });
+
+        // Outer highlight ring if selected or active in live journey
+        if (focusIdx === i || activeSimNode === i) {
+          const ring = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          ring.setAttribute("cx", n.x);
+          ring.setAttribute("cy", n.y);
+          ring.setAttribute("r", "32");
+          ring.setAttribute("fill", "none");
+          ring.setAttribute("stroke", activeSimNode === i ? "#10B981" : n.stroke);
+          ring.setAttribute("stroke-width", "2.5");
+          ring.setAttribute("stroke-dasharray", activeSimNode === i ? "none" : "4 3");
+          g.appendChild(ring);
+        }
+
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("cx", n.x);
+        circle.setAttribute("cy", n.y);
+        circle.setAttribute("r", "26");
+        circle.setAttribute("fill", n.fill);
+        circle.setAttribute("stroke", n.stroke);
+        circle.setAttribute("stroke-width", "2.5");
+        circle.setAttribute("class", "node-circle");
+        g.appendChild(circle);
+
+        const codeTxt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        codeTxt.setAttribute("x", n.x);
+        codeTxt.setAttribute("y", n.y - 2);
+        codeTxt.setAttribute("text-anchor", "middle");
+        codeTxt.setAttribute("fill", "#FFFFFF");
+        codeTxt.setAttribute("font-size", "13");
+        codeTxt.setAttribute("font-weight", "800");
+        codeTxt.setAttribute("font-family", "monospace");
+        codeTxt.textContent = n.code;
+        g.appendChild(codeTxt);
+
+        const lblTxt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        lblTxt.setAttribute("x", n.x);
+        lblTxt.setAttribute("y", n.y + 12);
+        lblTxt.setAttribute("text-anchor", "middle");
+        lblTxt.setAttribute("fill", "#E2E8F0");
+        lblTxt.setAttribute("font-size", "8.5");
+        lblTxt.setAttribute("font-weight", "700");
+        lblTxt.textContent = n.label;
+        g.appendChild(lblTxt);
+
+        nodesLayer.appendChild(g);
+      });
+
+      // 5. Draw Absorbing Nodes (A1 Graduate, A2 Dropout)
+      ABSORBING_COORDS.forEach((a, idx) => {
+        const absStateId = idx === 0 ? 4 : 5;
+        const isReached = activeSimNode === absStateId;
+
+        const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+
+        if (isReached) {
+          const glow = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+          glow.setAttribute("x", a.x - 68);
+          glow.setAttribute("y", a.y - 25);
+          glow.setAttribute("width", "136");
+          glow.setAttribute("height", "50");
+          glow.setAttribute("rx", "12");
+          glow.setAttribute("fill", "none");
+          glow.setAttribute("stroke", a.fill);
+          glow.setAttribute("stroke-width", "3");
+          g.appendChild(glow);
+        }
+
+        const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        rect.setAttribute("x", a.x - 62);
+        rect.setAttribute("y", a.y - 20);
+        rect.setAttribute("width", "124");
+        rect.setAttribute("height", "40");
+        rect.setAttribute("rx", "9");
+        rect.setAttribute("fill", a.fill);
+        rect.setAttribute("stroke", a.stroke);
+        rect.setAttribute("stroke-width", "2.5");
+        g.appendChild(rect);
+
+        const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        txt.setAttribute("x", a.x);
+        txt.setAttribute("y", a.y + 4);
+        txt.setAttribute("text-anchor", "middle");
+        txt.setAttribute("fill", "#FFFFFF");
+        txt.setAttribute("font-size", "12.5");
+        txt.setAttribute("font-weight", "800");
+        txt.textContent = `${a.code}: ${a.label} (p=1)`;
+        g.appendChild(txt);
+
+        nodesLayer.appendChild(g);
+      });
+    }
+
+    function updateNodeInspector() {
+      const bar = document.getElementById("nodeInspector");
+      const st = STATES[selectedNodeIndex];
+      const row = currentP[selectedNodeIndex];
+
+      bar.innerHTML = `
+        <span><strong>Selected ${st.short} Next-Semester Moves:</strong></span>
+        <span class="tabular" style="font-size:0.77rem;">
+          S1: <b>${(row[0] * 100).toFixed(0)}%</b> &bull;
+          S2: <b>${(row[1] * 100).toFixed(0)}%</b> &bull;
+          S3: <b>${(row[2] * 100).toFixed(0)}%</b> &bull;
+          S4: <b>${(row[3] * 100).toFixed(0)}%</b> &bull;
+          <span style="color:var(--emerald-700);">Grad: <b>${(row[4] * 100).toFixed(0)}%</b></span> &bull;
+          <span style="color:var(--crimson-700);">Drop: <b>${(row[5] * 100).toFixed(0)}%</b></span>
+        </span>
+      `;
+    }
+
+    /* ==========================================================================
+       LIVE STUDENT PATH SIMULATOR & 1,000-STUDENT MONTE CARLO ENGINE
+       ========================================================================== */
+    function sampleNextState(stateIdx) {
+      const row = currentP[stateIdx];
+      const total = row.reduce((a, b) => a + b, 0);
+      const r = Math.random() * (total > 0 ? total : 1);
+      let cumulative = 0;
+      for (let j = 0; j < 6; j++) {
+        cumulative += row[j];
+        if (r <= cumulative) return j;
+      }
+      return 5;
+    }
+
+    function renderJourneyTrail() {
+      const trail = document.getElementById("journeyTrail");
+      trail.innerHTML = "";
+
+      journeyHistory.forEach((stIdx, stepNum) => {
+        if (stepNum > 0) {
+          const arr = document.createElement("span");
+          arr.className = "step-arrow";
+          arr.innerHTML = "&rarr;";
+          trail.appendChild(arr);
+        }
+
+        const pill = document.createElement("span");
+        pill.className = "step-pill";
+
+        if (stIdx < 4) {
+          if (stIdx === 3) pill.classList.add("s4");
+          pill.textContent = `Sem ${stepNum}: ${STATES[stIdx].short}`;
+        } else if (stIdx === 4) {
+          pill.classList.add("grad");
+          pill.textContent = `Sem ${stepNum}: GRADUATED!`;
+        } else {
+          pill.classList.add("drop");
+          pill.textContent = `Sem ${stepNum}: DROPPED OUT`;
+        }
+        trail.appendChild(pill);
+      });
+
+      const currentLast = journeyHistory[journeyHistory.length - 1];
+      const isAbsorbed = currentLast >= 4;
+      document.getElementById("btnStepSim").disabled = isAbsorbed;
+
+      if (!isAbsorbed && currentLast < 4) {
+        selectedNodeIndex = currentLast;
+        updateNodeInspector();
+      }
+      renderStateSvg();
+    }
+
+    function stepStudentOnce() {
+      const curr = journeyHistory[journeyHistory.length - 1];
+      if (curr >= 4) {
+        stopAutoSim();
+        return;
+      }
+      const next = sampleNextState(curr);
+      journeyHistory.push(next);
+      renderJourneyTrail();
+
+      if (next >= 4 || journeyHistory.length > 25) {
+        stopAutoSim();
+      }
+    }
+
+    function stopAutoSim() {
+      if (autoSimTimer) {
+        clearInterval(autoSimTimer);
+        autoSimTimer = null;
+      }
+      document.getElementById("btnAutoSim").textContent = "Auto-Run Journey";
+    }
+
+    function resetStudentSim() {
+      stopAutoSim();
+      const startIdx = parseInt(document.getElementById("simStartSelect").value, 10);
+      journeyHistory = [startIdx];
+      selectedNodeIndex = startIdx;
+      renderJourneyTrail();
+      updateNodeInspector();
+    }
+
+    function runMonteCarloCohort() {
+      const startIdx = parseInt(document.getElementById("simStartSelect").value, 10);
+      const TRIALS = 1000;
+      let gradCount = 0;
+      let dropCount = 0;
+      let totalSemesters = 0;
+
+      for (let t = 0; t < TRIALS; t++) {
+        let state = startIdx;
+        let steps = 0;
+        while (state < 4 && steps < 200) {
+          state = sampleNextState(state);
+          steps++;
+        }
+        if (state === 4) gradCount++;
+        else dropCount++;
+        totalSemesters += steps;
+      }
+
+      const simGradPct = (gradCount / TRIALS) * 100;
+      const simDropPct = (dropCount / TRIALS) * 100;
+      const simAvgSem = totalSemesters / TRIALS;
+
+      const mcBox = document.getElementById("mcResults");
+      mcBox.style.display = "block";
+      document.getElementById("mcStartName").textContent = STATES[startIdx].short;
+      document.getElementById("mcSimVal").textContent =
+        `Grad: ${simGradPct.toFixed(1)}% | Drop: ${simDropPct.toFixed(1)}% | ${simAvgSem.toFixed(2)} sem`;
+
+      updateMonteCarloTheory(simGradPct);
+    }
+
+    function updateMonteCarloTheory(simGradPct = null) {
+      const mcBox = document.getElementById("mcResults");
+      if (mcBox.style.display === "none" || !latestComputation) return;
+
+      const startIdx = parseInt(document.getElementById("simStartSelect").value, 10);
+      const thGradPct = latestComputation.B[startIdx][0] * 100;
+      const thDropPct = latestComputation.B[startIdx][1] * 100;
+      const thSem = latestComputation.expectedSemesters[startIdx];
+
+      document.getElementById("mcStartName").textContent = STATES[startIdx].short;
+      document.getElementById("mcTheoryVal").textContent =
+        `Grad: ${thGradPct.toFixed(1)}% | Drop: ${thDropPct.toFixed(1)}% | ${thSem.toFixed(2)} sem`;
+
+      if (simGradPct !== null) {
+        const diff = Math.abs(simGradPct - thGradPct);
+        document.getElementById("mcDiffBadge").textContent = `Variance: ${diff.toFixed(1)}%`;
+      }
+    }
+
+    /* ==========================================================================
+       SCENARIO SWITCHING & OFFLINE HTML DOWNLOAD
+       ========================================================================== */
+    function applyScenario(key) {
+      const sc = SCENARIOS[key];
+      if (!sc) return;
+
+      currentScenarioKey = key;
+      currentP = cloneMatrix(sc.matrix);
+
+      // Update active button state
+      document.querySelectorAll(".scenario-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.scenario === key);
+      });
+
+      // Update header pill & description
+      const pill = document.getElementById("activeModePill");
+      pill.classList.toggle("intervention", sc.isIntervention);
+      pill.querySelector(".dot").style.background = sc.isIntervention ? "#FBBF24" : "#34D399";
+      document.getElementById("activeModeText").textContent = `Scenario: ${sc.label}`;
+      document.getElementById("scenarioDesc").textContent = sc.description;
+
+      renderMatrixInputs();
+      recalculateAndRenderAll();
+      resetStudentSim();
+      document.getElementById("mcResults").style.display = "none";
+    }
+
+    function downloadStandaloneHtml() {
+      try {
+        const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+        const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "Student_Graduation_Markov_Simulator.html";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        showToast("Saved Student_Graduation_Markov_Simulator.html for offline use!");
+      } catch (err) {
+        showToast("Unable to trigger download in this preview frame.");
+      }
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById("toast");
+      toast.textContent = msg;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 3000);
+    }
+
+    /* ==========================================================================
+       INITIALIZATION ON LOAD
+       ========================================================================== */
+    window.addEventListener("DOMContentLoaded", () => {
+      // Pre-compute baseline metrics once for accurate delta badges
+      baselineMetrics = computeMarkovChain(SCENARIOS.baseline.matrix);
+
+      // Wire Scenario Buttons
+      document.querySelectorAll(".scenario-btn").forEach(btn => {
+        btn.addEventListener("click", () => applyScenario(btn.dataset.scenario));
+      });
+
+      // Wire Student Simulator Controls
+      document.getElementById("simStartSelect").addEventListener("change", resetStudentSim);
+      document.getElementById("btnStepSim").addEventListener("click", stepStudentOnce);
+      document.getElementById("btnResetSim").addEventListener("click", resetStudentSim);
+      document.getElementById("btnMonteCarlo").addEventListener("click", runMonteCarloCohort);
+
+      document.getElementById("btnAutoSim").addEventListener("click", () => {
+        if (autoSimTimer) {
+          stopAutoSim();
+          return;
+        }
+        const curr = journeyHistory[journeyHistory.length - 1];
+        if (curr >= 4) resetStudentSim();
+        document.getElementById("btnAutoSim").textContent = "Pause Run";
+        stepStudentOnce();
+        autoSimTimer = setInterval(stepStudentOnce, 480);
+      });
+
+      // Wire Download .HTML File button
+      document.getElementById("btnDownloadHtml").addEventListener("click", downloadStandaloneHtml);
+
+      // Initial render
+      renderMatrixInputs();
+      recalculateAndRenderAll();
+      renderJourneyTrail();
+    });
+  </script>
+</body>
+</html>
